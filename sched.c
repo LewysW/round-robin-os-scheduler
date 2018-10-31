@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 static bool finished = false;
 
@@ -53,26 +54,24 @@ int parseFile(char* fileName) {
             exit(status);
         }
 
+        //Creates process
         pid = fork();
 
+        //if error return -1
         if (pid < 0) {
             return -1;
-        } else if (pid > 0) {
+        } else if (pid > 0) { //if parent, stop process immediately and get pid
             kill(pid, SIGSTOP);
             proc.pid = pid;
-        } else {
+            //Enqueues a process to the queue
+            pthread_mutex_lock(&(queue->lock));
+            enqueue(queue, proc);
+            pthread_mutex_unlock(&(queue->lock));
+        } else { //if child, exectue program at specified path with args.
             int status = execvp(proc.path, proc.args);
-            printf("ERROR: %s\n", strerror(errno));
-            exit(status);
         }
-
-        //Enqueues a process to the queue
-        pthread_mutex_lock(&(queue->lock));
-        enqueue(queue, proc);
-        pthread_mutex_unlock(&(queue->lock));
     }
     printQueue(queue);
-
     finished = true;
     pthread_join(tid, NULL);
     free(line);
@@ -87,9 +86,14 @@ Round robin scheduler for processes using second thread of execution
 void* schedule(void* arg) {
     Queue* queue = ((Queue*) arg);
     printQueue(queue);
+    int status;
 
     while(true) {
+        //If main thread has finished reading processes and queue is empty, exit
         if (finished && isEmpty(queue)) break;
+
+        /* If queue is not empty, run process at head of queue for set time
+        and then move process to tail of queue*/
         if (!isEmpty(queue)) {
             kill(queue->head->proc.pid, SIGCONT);
             usleep(500000);
