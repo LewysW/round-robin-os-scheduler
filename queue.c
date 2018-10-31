@@ -38,6 +38,10 @@ void enqueue(Queue* queue, struct process p) {
     queue->tail = node;
 }
 
+bool isEmpty(Queue* queue) {
+    return (queue->head == NULL);
+}
+
 int headToTail(Queue* queue) {
     if (queue->head == NULL) return -1;
 
@@ -54,7 +58,7 @@ Prints process struct of each node in queue
 */
 void printQueue(Queue* queue) {
     Node* node = queue->head;
-    printf("HEAD\n-->");
+    printf("\nHEAD\n-->");
 
     while (node != NULL) {
         printf("%d %s", node->proc.priority, node->proc.path);

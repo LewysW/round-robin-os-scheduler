@@ -10,7 +10,7 @@
 
 //Struct to store process data
 struct process {
-    int pid;
+    pid_t pid;
     int priority;
     char* path;
     char** args;
@@ -43,11 +43,16 @@ void enqueue(Queue* queue, struct process p);
 //Moves head of queue to tail
 int headToTail(Queue* queue);
 
+bool isEmpty(Queue* queue);
+
 //Prints contents of struct processes in queue
 void printQueue(Queue* queue);
 
 //Parse file line by line
 int parseFile(char* fileName);
+
+//Schedules processes using second thread of execution
+void* schedule(void* arg);
 
 //Initialises a process struct given a string and process pointer
 int initStruct(char* line, struct process* proc);
