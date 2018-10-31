@@ -1,6 +1,10 @@
 #ifndef SCHED_H
 #define SCHED_H
 #include <stdbool.h>
+#include <signal.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define DECIMAL 10
 
@@ -13,6 +17,34 @@ struct process {
     int argc;
     bool completed;
 };
+
+//Struct to store queue node
+typedef struct node {
+    struct process proc;
+    struct node* next;
+} Node;
+
+//Struct to store queue
+typedef struct queue {
+    Node* head;
+    Node* tail;
+    pthread_mutex_t lock;
+} Queue;
+
+//Initialises a queue
+int initQueue(Queue* queue);
+
+//Creates a queue node
+Node* makeNode(struct process p);
+
+//Enqueues a new node to the queue
+void enqueue(Queue* queue, struct process p);
+
+//Moves head of queue to tail
+int headToTail(Queue* queue);
+
+//Prints contents of struct processes in queue
+void printQueue(Queue* queue);
 
 //Parse file line by line
 int parseFile(char* fileName);

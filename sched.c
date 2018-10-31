@@ -1,6 +1,4 @@
 #include "sched.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -33,14 +31,14 @@ int parseFile(char* fileName) {
     char* line = NULL;
     size_t len = 0;
     ssize_t bytesRead;
+    struct process proc;
+    Queue* queue = (Queue*) malloc(sizeof(queue));
 
     fp = fopen(fileName, "r");
 
     if (fp == NULL) return -1;
 
     while ((bytesRead = getline(&line, &len, fp)) != EOF) {
-        printf("%s", line);
-        struct process proc;
         int status = initStruct(line, &proc);
 
         if (status != 0) {
@@ -48,24 +46,32 @@ int parseFile(char* fileName) {
             exit(status);
         }
 
+        enqueue(queue, proc);
         //TODO add process to queue HERE!!!
     }
 
+    printQueue(queue);
+    printf("\n");
+    headToTail(queue);
+    printQueue(queue);
+    headToTail(queue);
+    printQueue(queue);
+    headToTail(queue);
+    printQueue(queue);
     free(line);
     fclose(fp);
     return 0;
 }
 
 /**
-Intiliases a process struct given a string
-@line - line to be tokenised into struct
+Intiliases a process struct given a config file entry
+@line - entry to be tokenised into struct
 @proc - process struct to be initialised
 @return - the status code
 */
 int initStruct(char* line, struct process* proc) {
     const char* delim = " ";
     char* token;
-    int argc = 0;
 
     //Checks for valid token
     if ((token = strtok(line, delim)) == NULL) return -1;
@@ -75,27 +81,32 @@ int initStruct(char* line, struct process* proc) {
 
     //Checks for valid token
     if ((token = strtok(NULL, delim)) == NULL) return -1;
+
     //Checks that path is valid executable file
     if (!(isExec(token))) return -1;
-    proc->path = token;
+    proc->path = (char*) malloc(sizeof(char*));
+    strncpy(proc->path, token, strlen(token));
 
     proc->argc = 0;
-    proc->args = malloc(sizeof(char**));
+    proc->args = (char**) malloc(sizeof(char**));
+
+    //Tokenises and stores arguments of config file entry
     while ((token = strtok(NULL, delim)) != NULL) {
         proc->args[proc->argc] = (char*) malloc(sizeof(char*));
-        proc->args[proc->argc++] = token;
-        printf("%s\n", proc->args[proc->argc - 1]);
+        strncpy(proc->args[proc->argc++], token, strlen(token) + 1);
     }
+
     return 0;
 }
 
 /**
 Frees the memory allocated to a process struct
+@p - process struct pointer to free
 */
 int freeStruct(struct process* p) {
     free(p->path);
     for (int i = 0; i < p->argc; i++) free(p->args[i]);
-    free(args);
+    free(p->args);
     return 0;
 }
 
