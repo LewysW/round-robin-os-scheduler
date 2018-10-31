@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 
 int main(int argc, char** argv) {
@@ -43,8 +44,8 @@ int parseFile(char* fileName) {
         int status = initStruct(line, &proc);
 
         if (status != 0) {
-            perror("Invalid config file structure");
-            exit(1);
+            perror("Invalid config file entry");
+            exit(status);
         }
 
         //TODO add process to queue HERE!!!
@@ -78,8 +79,23 @@ int initStruct(char* line, struct process* proc) {
     if (!(isExec(token))) return -1;
     proc->path = token;
 
-    if ((token = strtok(NULL, '\n')) == NULL) return -1;
-    proc->args = token;
+    proc->argc = 0;
+    proc->args = malloc(sizeof(char**));
+    while ((token = strtok(NULL, delim)) != NULL) {
+        proc->args[proc->argc] = (char*) malloc(sizeof(char*));
+        proc->args[proc->argc++] = token;
+        printf("%s\n", proc->args[proc->argc - 1]);
+    }
+    return 0;
+}
+
+/**
+Frees the memory allocated to a process struct
+*/
+int freeStruct(struct process* p) {
+    free(p->path);
+    for (int i = 0; i < p->argc; i++) free(p->args[i]);
+    free(args);
     return 0;
 }
 

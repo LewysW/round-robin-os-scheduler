@@ -9,7 +9,8 @@ struct process {
     int pid;
     int priority;
     char* path;
-    char* arguments;
+    char** args;
+    int argc;
     bool completed;
 };
 
@@ -18,6 +19,9 @@ int parseFile(char* fileName);
 
 //Initialises a process struct given a string and process pointer
 int initStruct(char* line, struct process* proc);
+
+//Frees process struct memory
+int freeStruct(struct process* p);
 
 //Checks if path is valid executable file
 bool isExec(char* path);
