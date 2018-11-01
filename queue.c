@@ -88,15 +88,15 @@ Prints process struct of each node in queue
 */
 void printQueue(Queue* queue) {
     Node* node = queue->head;
-    printf("\nHEAD\n-->");
+    printf("\nHEAD --> ");
 
     while (node != NULL) {
-        printf("%d %s", node->proc.priority, node->proc.path);
+        printf("[%d %s", node->proc.priority, node->proc.path);
         for (int i = 0; i < node->proc.argc; i++) printf(" %s", node->proc.args[i]);
-        printf("-->");
+        printf("] --> ");
         node = node->next;
     }
 
-    printf("TAIL\n-->");
+    printf("TAIL -->");
     printf("NULL\n");
 }

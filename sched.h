@@ -17,7 +17,6 @@ struct process {
     char* path;
     char** args;
     int argc;
-    bool completed;
 };
 
 //Struct to store queue node

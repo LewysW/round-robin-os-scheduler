@@ -69,7 +69,6 @@ int parseFile(char* fileName) {
             pthread_mutex_unlock(&(queue->lock));
         } else { //if child, exectue program at specified path with args.
             int status = execv(proc.path, proc.args);
-            //exit(0);
         }
     }
     printQueue(queue);
@@ -134,7 +133,6 @@ Intiliases a process struct given a config file entry
 int initStruct(char* line, struct process* proc) {
     const char* delim = " ";
     char* token;
-    proc->completed = false;
 
     //Checks for valid token
     if ((token = strtok(line, delim)) == NULL) return -1;
@@ -162,7 +160,11 @@ int initStruct(char* line, struct process* proc) {
         strncpy(proc->args[proc->argc++], token, strlen(token) + 1);
     }
 
-    //Sets final argument to NULL so it can be run by execvp()
+    //Removes '\n' from end of last argument
+    token = strtok(proc->args[proc->argc - 1], "\n");
+    strncpy(proc->args[proc->argc - 1], token, strlen(token) + 1);
+
+    //Sets final argument to NULL so it can be run by execv()
     proc->args[proc->argc] = NULL;
 
     return 0;
