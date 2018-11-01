@@ -68,12 +68,14 @@ int parseFile(char* fileName) {
             enqueue(queue, proc);
             pthread_mutex_unlock(&(queue->lock));
         } else { //if child, exectue program at specified path with args.
-            int status = execvp(proc.path, proc.args);
+            int status = execv(proc.path, proc.args);
+            //exit(0);
         }
     }
     printQueue(queue);
     finished = true;
     pthread_join(tid, NULL);
+    printf("Thread joined\n");
     free(line);
     fclose(fp);
     return 0;
@@ -86,7 +88,8 @@ Round robin scheduler for processes using second thread of execution
 void* schedule(void* arg) {
     Queue* queue = ((Queue*) arg);
     printQueue(queue);
-    int status;
+    pid_t result;
+    int wstatus;
 
     while(true) {
         //If main thread has finished reading processes and queue is empty, exit
@@ -95,12 +98,28 @@ void* schedule(void* arg) {
         /* If queue is not empty, run process at head of queue for set time
         and then move process to tail of queue*/
         if (!isEmpty(queue)) {
+            //Runs process for period of quantum
             kill(queue->head->proc.pid, SIGCONT);
-            usleep(500000);
+            usleep(QUANTUM);
             kill(queue->head->proc.pid, SIGSTOP);
+
+            result = waitpid(queue->head->proc.pid, &wstatus, WNOHANG);
+
+            if (result == -1) {
+                perror("waitpid");
+                continue;
+            }
+
+            //If process has finished, remove from queue
             pthread_mutex_lock(&(queue->lock));
-            headToTail(queue);
-            printQueue(queue);
+            if (result == 0) {
+                headToTail(queue);
+                printQueue(queue);
+            } else {
+                if (dequeue(queue) != NULL) printf(" finished execution.\n");
+                else printf("Error, could not dequeue\n");
+
+            }
             pthread_mutex_unlock(&(queue->lock));
         }
     }

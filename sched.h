@@ -5,8 +5,10 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 #define DECIMAL 10
+#define QUANTUM 500000
 
 //Struct to store process data
 struct process {
@@ -40,9 +42,13 @@ Node* makeNode(struct process p);
 //Enqueues a new node to the queue
 void enqueue(Queue* queue, struct process p);
 
+//Dequeues head node of queue and returns it
+Node* dequeue(Queue* queue);
+
 //Moves head of queue to tail
 int headToTail(Queue* queue);
 
+//Checks if queue is empty
 bool isEmpty(Queue* queue);
 
 //Prints contents of struct processes in queue
