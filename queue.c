@@ -97,6 +97,6 @@ void printQueue(Queue* queue) {
         node = node->next;
     }
 
-    printf("TAIL -->");
+    printf("TAIL --> ");
     printf("NULL\n");
 }
