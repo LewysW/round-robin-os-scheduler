@@ -136,17 +136,21 @@ int initStruct(char* line, struct process* proc) {
 
     //Checks for valid token
     if ((token = strtok(line, delim)) == NULL) return -1;
+    printf("%s\n", token);
     //Checks that priority is numeric
     if (!(isNumeric(token))) return -1;
+    printf("%s\n", token);
     proc->priority = atoi(token);
 
     //Checks for valid token
     if ((token = strtok(NULL, delim)) == NULL) return -1;
+    printf("%s\n", token);
 
     //Checks that path is valid executable file
     if (!(isExec(token))) return -1;
-    proc->path = (char*) malloc(sizeof(char*));
-    strncpy(proc->path, token, strlen(token));
+    proc->path = (char*) malloc((sizeof(char) * strlen(token)) + 1);
+    strncpy(proc->path, token, strlen(token) + 1);
+    printf("%s\n", token);
 
     //Stores path in first argument of args
     proc->argc = 0;
