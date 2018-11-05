@@ -75,7 +75,9 @@ int parseFile(char* fileName) {
     finished = true;
     pthread_join(tid, NULL);
     printf("Thread joined\n");
+    
     free(line);
+    free(queue);
     fclose(fp);
     return 0;
 }
@@ -117,7 +119,6 @@ void* schedule(void* arg) {
             } else {
                 if (dequeue(queue) != NULL) printf(" finished execution.\n");
                 else printf("Error, could not dequeue\n");
-
             }
             pthread_mutex_unlock(&(queue->lock));
         }
@@ -136,66 +137,30 @@ int initStruct(char* line, struct process* proc) {
 
     //Checks for valid token
     if ((token = strtok(line, delim)) == NULL) return -1;
-    printf("%s\n", token);
     //Checks that priority is numeric
     if (!(isNumeric(token))) return -1;
-    printf("%s\n", token);
     proc->priority = atoi(token);
 
     //Checks for valid token
     if ((token = strtok(NULL, delim)) == NULL) return -1;
-    printf("%s\n", token);
-
-    //Checks that path is valid executable file
-    if (!(isExec(token))) return -1;
-    proc->path = (char*) malloc((sizeof(char) * strlen(token)) + 1);
-    strncpy(proc->path, token, strlen(token) + 1);
-    printf("%s\n", token);
+    proc->path = strdup(token);
 
     //Stores path in first argument of args
     proc->argc = 0;
     proc->args = (char**) malloc(sizeof(char**));
-    proc->args[proc->argc] = (char*) malloc(sizeof(char*));
-    strncpy(proc->args[proc->argc++], proc->path, strlen(proc->path) + 1);
+    proc->args[proc->argc++] = proc->path;
 
     //Tokenises and stores arguments of config file entry
-    while ((token = strtok(NULL, delim)) != NULL) {
-        proc->args[proc->argc] = (char*) malloc(sizeof(char*));
-        strncpy(proc->args[proc->argc++], token, strlen(token) + 1);
-    }
+    while ((token = strtok(NULL, delim)) != NULL)
+        proc->args[proc->argc++] = strdup(token);
 
     //Removes '\n' from end of last argument
-    token = strtok(proc->args[proc->argc - 1], "\n");
-    strncpy(proc->args[proc->argc - 1], token, strlen(token) + 1);
+    proc->args[proc->argc - 1] = strdup(strtok(proc->args[proc->argc - 1], "\n"));
 
     //Sets final argument to NULL so it can be run by execv()
     proc->args[proc->argc] = NULL;
 
     return 0;
-}
-
-/**
-Frees the memory allocated to a process struct
-@p - process struct pointer to free
-*/
-int freeStruct(struct process* p) {
-    free(p->path);
-    for (int i = 0; i < p->argc; i++) free(p->args[i]);
-    free(p->args);
-    return 0;
-}
-
-/**
-Determines if string is valid path to executable file
-@path - path of file to check
-@return - true or false if file is valid executable
-*/
-bool isExec(char* path) {
-    struct stat buf;
-    //If file is valid, is a regular file, and is executable
-    if (!(stat(path, &buf)) && S_ISREG(buf.st_mode) && (buf.st_mode & S_IXUSR)) return true;
-
-    return false;
 }
 
 /**
