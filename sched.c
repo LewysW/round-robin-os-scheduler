@@ -153,20 +153,20 @@ int initStruct(char* line, struct process* proc) {
 
     //Stores path in first argument of args
     proc->argc = 0;
-    proc->args = (char**) malloc(sizeof(char*) * (proc->argc + 1));
+    proc->args = (char**) malloc(sizeof(char**));
     proc->args[proc->argc++] = strdup(proc->path);
 
     //Tokenises and stores arguments of config file entry
-    while ((token = strtok(NULL, delim)) != NULL) {
-        proc->args = (char**) realloc(proc->args, sizeof(char*) * (proc->argc + 1));
-        proc->args[proc->argc++] = strdup(token);
-    }
+    while ((token = strtok(NULL, delim)) != NULL) proc->args[proc->argc++] = strdup(token);
 
-    //Removes '\n' from end of last argument
+    //Removes '\n' from end of path and last argument
+    proc->path = strdup(strtok(proc->path, "\n"));
     proc->args[proc->argc - 1] = strdup(strtok(proc->args[proc->argc - 1], "\n"));
 
     //Sets final argument to NULL so it can be run by execv()
     proc->args[proc->argc] = NULL;
+
+    for (int i = 0; i < proc->argc; i++) printf("%s\n", proc->args[i]);
 
     return 0;
 }

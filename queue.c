@@ -33,8 +33,7 @@ Frees node data structure
 **/
 void freeNode(Node* node) {
     free(node->proc->path);
-    for (int i = 0; i < node->proc->argc; i++) free(node->proc->args[i]);
-    free(node->proc->args);
+    for (int i = 1; i < node->proc->argc; i++) free(node->proc->args[i]);
     free(node->proc);
     free(node);
 }

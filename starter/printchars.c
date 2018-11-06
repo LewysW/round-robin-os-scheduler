@@ -4,15 +4,22 @@
 #include <stdio.h>
 #include <limits.h>
 #include <unistd.h>
+#include <stdlib.h>
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
     char c;
+    int j = 0;
 
-    if(argc < 2) c = '*';
-    else c = *argv[1];
+    if(argc < 3) {
+        c = '*';
+        j = 30;
+    } else {
+        c = *argv[1];
+        j = atoi(argv[2]);
+    }
 
-    for(int i=0; i<30; i++)
+    for(int i=0; i<j; i++)
     {
         printf("%c",c);
         fflush(stdout);
