@@ -20,19 +20,30 @@ Makes a node for the queue
 @p - struct process to make node for
 @return - pointer to new node
 */
-Node* makeNode(struct process p) {
+Node* makeNode(struct process* p) {
     Node* node = (Node*) malloc(sizeof(Node));
     node->proc = p;
     node->next = NULL;
     return node;
 }
 
-//TODO - free returned node
+/**
+Frees node data structure
+@node - to be freed
+**/
+void freeNode(Node* node) {
+    free(node->proc->path);
+    for (int i = 0; i < node->proc->argc; i++) free(node->proc->args[i]);
+    free(node->proc->args);
+    free(node->proc);
+    free(node);
+}
+
 /**
 Creates node and enqueues in queue
 @p - process to create node for and
 */
-void enqueue(Queue* queue, struct process p) {
+void enqueue(Queue* queue, struct process* p) {
     Node* node = makeNode(p);
 
     if (queue->head == NULL) {
@@ -50,7 +61,7 @@ Dequeues head of queue
 @return - dequeued node
 */
 Node* dequeue(Queue* queue) {
-    if (queue->head == NULL) return NULL;
+    if (isEmpty(queue)) return NULL;
 
     Node* node;
     node = queue->head;
@@ -75,7 +86,7 @@ Moves node at head of queue to tail
 int headToTail(Queue* queue) {
     if (queue->head == NULL) return -1;
 
-    struct process temp;
+    struct process* temp;
     temp = queue->head->proc;
     queue->head = queue->head->next;
     enqueue(queue, temp);
@@ -91,8 +102,8 @@ void printQueue(Queue* queue) {
     printf("\nHEAD --> ");
 
     while (node != NULL) {
-        printf("[%d %s", node->proc.priority, node->proc.path);
-        for (int i = 0; i < node->proc.argc; i++) printf(" %s", node->proc.args[i]);
+        printf("[%d %s", node->proc->priority, node->proc->path);
+        for (int i = 0; i < node->proc->argc; i++) printf(" %s", node->proc->args[i]);
         printf("] --> ");
         node = node->next;
     }

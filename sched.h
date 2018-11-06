@@ -21,7 +21,7 @@ struct process {
 
 //Struct to store queue node
 typedef struct node {
-    struct process proc;
+    struct process* proc;
     struct node* next;
 } Node;
 
@@ -36,10 +36,13 @@ typedef struct queue {
 int initQueue(Queue* queue);
 
 //Creates a queue node
-Node* makeNode(struct process p);
+Node* makeNode(struct process* p);
+
+//Frees a node structure
+void freeNode(Node* node);
 
 //Enqueues a new node to the queue
-void enqueue(Queue* queue, struct process p);
+void enqueue(Queue* queue, struct process* p);
 
 //Dequeues head node of queue and returns it
 Node* dequeue(Queue* queue);

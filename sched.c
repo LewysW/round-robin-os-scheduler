@@ -34,7 +34,7 @@ int parseFile(char* fileName) {
     char* line = NULL;
     size_t len = 0;
     ssize_t bytesRead;
-    struct process proc;
+    struct process* proc;
     Queue* queue = (Queue*) malloc(sizeof(queue));
     pthread_t tid;
     pid_t pid;
@@ -47,7 +47,8 @@ int parseFile(char* fileName) {
 
     //Reads file line by line, converting each line into a process
     while ((bytesRead = getline(&line, &len, fp)) != EOF) {
-        int status = initStruct(line, &proc);
+        proc = (struct process*) malloc(sizeof(struct process));
+        int status = initStruct(line, proc);
 
         if (status != 0) {
             perror("Invalid config file entry");
@@ -62,20 +63,21 @@ int parseFile(char* fileName) {
             return -1;
         } else if (pid > 0) { //if parent, stop process immediately and get pid
             kill(pid, SIGSTOP);
-            proc.pid = pid;
+            proc->pid = pid;
             //Enqueues a process to the queue
             pthread_mutex_lock(&(queue->lock));
             enqueue(queue, proc);
             pthread_mutex_unlock(&(queue->lock));
         } else { //if child, exectue program at specified path with args.
-            int status = execv(proc.path, proc.args);
+            int status = execv(proc->path, proc->args);
+            exit(0);
         }
     }
     printQueue(queue);
     finished = true;
     pthread_join(tid, NULL);
     printf("Thread joined\n");
-    
+
     free(line);
     free(queue);
     fclose(fp);
@@ -100,11 +102,11 @@ void* schedule(void* arg) {
         and then move process to tail of queue*/
         if (!isEmpty(queue)) {
             //Runs process for period of quantum
-            kill(queue->head->proc.pid, SIGCONT);
+            kill(queue->head->proc->pid, SIGCONT);
             usleep(QUANTUM);
-            kill(queue->head->proc.pid, SIGSTOP);
+            kill(queue->head->proc->pid, SIGSTOP);
 
-            result = waitpid(queue->head->proc.pid, &wstatus, WNOHANG);
+            result = waitpid(queue->head->proc->pid, &wstatus, WNOHANG);
 
             if (result == -1) {
                 perror("waitpid");
@@ -117,7 +119,11 @@ void* schedule(void* arg) {
                 headToTail(queue);
                 printQueue(queue);
             } else {
-                if (dequeue(queue) != NULL) printf(" finished execution.\n");
+                Node* node;
+                if ((node = dequeue(queue)) != NULL) {
+                    printf(" finished execution.\n");
+                    freeNode(node);
+                }
                 else printf("Error, could not dequeue\n");
             }
             pthread_mutex_unlock(&(queue->lock));
@@ -147,12 +153,14 @@ int initStruct(char* line, struct process* proc) {
 
     //Stores path in first argument of args
     proc->argc = 0;
-    proc->args = (char**) malloc(sizeof(char**));
-    proc->args[proc->argc++] = proc->path;
+    proc->args = (char**) malloc(sizeof(char*) * (proc->argc + 1));
+    proc->args[proc->argc++] = strdup(proc->path);
 
     //Tokenises and stores arguments of config file entry
-    while ((token = strtok(NULL, delim)) != NULL)
+    while ((token = strtok(NULL, delim)) != NULL) {
+        proc->args = (char**) realloc(proc->args, sizeof(char*) * (proc->argc + 1));
         proc->args[proc->argc++] = strdup(token);
+    }
 
     //Removes '\n' from end of last argument
     proc->args[proc->argc - 1] = strdup(strtok(proc->args[proc->argc - 1], "\n"));
