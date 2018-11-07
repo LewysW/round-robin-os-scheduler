@@ -79,4 +79,6 @@ void incrWaitTime(Queue* queue, unsigned long long runTime);
 //Displays time data of processes
 void dispTimeData(Node* node);
 
+void dispAverageTimes(long long unsigned waitTime, long long unsigned runTime, int numProcesses);
+
 #endif

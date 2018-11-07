@@ -97,6 +97,9 @@ Round robin scheduler for processes using second thread of execution
 void* schedule(void* arg) {
     Queue* queue = ((Queue*) arg);
     pid_t result;
+    long long unsigned meanWaitTime = 0;
+    long long unsigned meanRunTime = 0;
+    int numProcesses = 0;
 
     while(true) {
         //If main thread has finished reading processes and queue is empty, exit
@@ -123,7 +126,9 @@ void* schedule(void* arg) {
             } else {
                 Node* node;
                 if ((node = dequeue(queue)) != NULL) {
-                    printf(" finished execution.\n");
+                    meanRunTime += node->proc->runTime;
+                    meanWaitTime += node->proc->waitTime;
+                    numProcesses++;
                     dispTimeData(node);
                     freeNode(node);
                 }
@@ -132,6 +137,8 @@ void* schedule(void* arg) {
             pthread_mutex_unlock(&(queue->lock));
         }
     }
+
+    dispAverageTimes(meanWaitTime, meanRunTime, numProcesses);
 }
 
 /**
@@ -226,14 +233,33 @@ void incrWaitTime(Queue* queue, unsigned long long runTime) {
     }
 }
 
+/**
+Displays average arrival, wait, run, and turnaround times of process
+@node - to display time data about
+*/
 void dispTimeData(Node* node) {
-        long long unsigned arrivalTime = (node->proc->arrivalTime.tv_sec * 1000000) + node->proc->arrivalTime.tv_usec;
-        arrivalTime -= startTime;
-        printf("PID: %d\n", node->proc->pid);
-        printf("Args: %s, %s\n", node->proc->args[0], node->proc->args[1]);
-        printf("Arrival Time: %lu\n", arrivalTime);
-        printf("Wait Time: %lu\n", node->proc->waitTime);
-        printf("Run Time: %lu\n", node->proc->runTime);
-        printf("Turnaround Time: %lu\n", node->proc->waitTime + node->proc->runTime);
-        printf("\n");
+    /*Arrival time of process computed by subtracting start time of first
+    process from start */
+    long long unsigned arrivalTime = (node->proc->arrivalTime.tv_sec * 1000000) + node->proc->arrivalTime.tv_usec;
+    arrivalTime -= startTime;
+    printf("\n\nPID: %d\n", node->proc->pid);
+    printf("Args: %s, %s\n", node->proc->args[0], node->proc->args[1]);
+    printf("Arrival Time: %lu\n", arrivalTime);
+    printf("Wait Time: %lu\n", node->proc->waitTime);
+    printf("Run Time: %lu\n", node->proc->runTime);
+    printf("Turnaround Time: %lu\n", node->proc->waitTime + node->proc->runTime);
+    printf("\n");
+}
+
+/**
+Displays the total execution time, mean wait time, mean run time, and mean turnaround time
+@waitTime - total wait time
+@runTime - total run time
+@numProcesses - total number of processes
+*/
+void dispAverageTimes(long long unsigned waitTime, long long unsigned runTime, int numProcesses) {
+    printf("Total Execution Time: %lu\n", waitTime + runTime);
+    printf("Average Wait Time: %lu\n", waitTime / numProcesses);
+    printf("Average Run Time: %lu\n", runTime / numProcesses);
+    printf("Average Turnaround Time: %lu\n\n", (waitTime / numProcesses) + (runTime / numProcesses));
 }
