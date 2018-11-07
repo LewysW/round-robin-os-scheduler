@@ -230,8 +230,10 @@ void dispTimeData(Node* node) {
         long long unsigned arrivalTime = (node->proc->arrivalTime.tv_sec * 1000000) + node->proc->arrivalTime.tv_usec;
         arrivalTime -= startTime;
         printf("PID: %d\n", node->proc->pid);
+        printf("Args: %s, %s\n", node->proc->args[0], node->proc->args[1]);
         printf("Arrival Time: %lu\n", arrivalTime);
         printf("Wait Time: %lu\n", node->proc->waitTime);
         printf("Run Time: %lu\n", node->proc->runTime);
         printf("Turnaround Time: %lu\n", node->proc->waitTime + node->proc->runTime);
+        printf("\n");
 }
