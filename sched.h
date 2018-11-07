@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#define DECIMAL 10
-#define QUANTUM 500000
+#define QUANTUM 10000
 
 //Struct to store process data
 struct process {
@@ -17,6 +16,9 @@ struct process {
     char* path;
     char** args;
     int argc;
+    struct timeval arrivalTime;
+    unsigned long long runTime;
+    unsigned long long waitTime;
 };
 
 //Struct to store queue node
@@ -67,5 +69,14 @@ int initStruct(char* line, struct process* proc);
 
 //Checks if string is numeric
 bool isNumeric(char* str);
+
+//Measures run time of process
+pid_t quantum(Queue* queue);
+
+//Increments wait time of processes
+void incrWaitTime(Queue* queue, unsigned long long runTime);
+
+//Displays time data of processes
+void dispTimeData(Node* node);
 
 #endif

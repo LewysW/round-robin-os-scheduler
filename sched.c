@@ -5,8 +5,10 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 
 static bool finished = false;
+long long unsigned startTime = 0;
 
 int main(int argc, char** argv) {
     //If number of args is incorrect, print usage and exit with error code -1
@@ -66,6 +68,11 @@ int parseFile(char* fileName) {
             proc->pid = pid;
             //Enqueues a process to the queue
             pthread_mutex_lock(&(queue->lock));
+            //Stores arrival time
+            gettimeofday(&proc->arrivalTime, NULL);
+            //Gets start time of overall operation
+            if (startTime == 0)
+                startTime = proc->arrivalTime.tv_sec * 1000000 + proc->arrivalTime.tv_usec;
             enqueue(queue, proc);
             pthread_mutex_unlock(&(queue->lock));
         } else { //if child, exectue program at specified path with args.
@@ -73,7 +80,6 @@ int parseFile(char* fileName) {
             exit(0);
         }
     }
-    printQueue(queue);
     finished = true;
     pthread_join(tid, NULL);
     printf("Thread joined\n");
@@ -90,9 +96,7 @@ Round robin scheduler for processes using second thread of execution
 */
 void* schedule(void* arg) {
     Queue* queue = ((Queue*) arg);
-    printQueue(queue);
     pid_t result;
-    int wstatus;
 
     while(true) {
         //If main thread has finished reading processes and queue is empty, exit
@@ -103,10 +107,8 @@ void* schedule(void* arg) {
         if (!isEmpty(queue)) {
             //Runs process for period of quantum
             kill(queue->head->proc->pid, SIGCONT);
-            usleep(QUANTUM);
+            result = quantum(queue);
             kill(queue->head->proc->pid, SIGSTOP);
-
-            result = waitpid(queue->head->proc->pid, &wstatus, WNOHANG);
 
             if (result == -1) {
                 perror("waitpid");
@@ -117,11 +119,12 @@ void* schedule(void* arg) {
             pthread_mutex_lock(&(queue->lock));
             if (result == 0) {
                 headToTail(queue);
-                printQueue(queue);
+                //printQueue(queue);
             } else {
                 Node* node;
                 if ((node = dequeue(queue)) != NULL) {
                     printf(" finished execution.\n");
+                    dispTimeData(node);
                     freeNode(node);
                 }
                 else printf("Error, could not dequeue\n");
@@ -166,8 +169,6 @@ int initStruct(char* line, struct process* proc) {
     //Sets final argument to NULL so it can be run by execv()
     proc->args[proc->argc] = NULL;
 
-    for (int i = 0; i < proc->argc; i++) printf("%s\n", proc->args[i]);
-
     return 0;
 }
 
@@ -183,4 +184,54 @@ bool isNumeric(char* str) {
         }
     }
     return true;
+}
+
+/**
+Measures the time a process has run and updates process time values
+@queue - process queue
+https://stackoverflow.com/questions/38831057/how-to-measure-the-execution-time-in-micro-seconds
+*/
+pid_t quantum(Queue* queue) {
+    struct timeval st, et;
+    pid_t pid;
+    unsigned long long elapsed = 0;
+    int wstatus;
+    gettimeofday(&st, NULL);
+
+    while((pid = waitpid(queue->head->proc->pid, &wstatus, WNOHANG)) == 0) {
+        gettimeofday(&et, NULL);
+        elapsed = ((et.tv_sec - st.tv_sec) * 1000000) + (et.tv_usec - st.tv_usec);
+
+        if (elapsed >= QUANTUM) {
+            queue->head->proc->runTime += elapsed;
+            incrWaitTime(queue, elapsed);
+            return pid;
+        }
+    }
+
+    incrWaitTime(queue, elapsed);
+    return pid;
+}
+
+/**
+Increments wait time of nodes in queue
+@queue - process queue
+@runTime - run time of last running process
+*/
+void incrWaitTime(Queue* queue, unsigned long long runTime) {
+    Node* nodePtr = queue->head;
+    while (nodePtr->next != NULL) {
+        nodePtr = nodePtr->next;
+        nodePtr->proc->waitTime += runTime;
+    }
+}
+
+void dispTimeData(Node* node) {
+        long long unsigned arrivalTime = (node->proc->arrivalTime.tv_sec * 1000000) + node->proc->arrivalTime.tv_usec;
+        arrivalTime -= startTime;
+        printf("PID: %d\n", node->proc->pid);
+        printf("Arrival Time: %lu\n", arrivalTime);
+        printf("Wait Time: %lu\n", node->proc->waitTime);
+        printf("Run Time: %lu\n", node->proc->runTime);
+        printf("Turnaround Time: %lu\n", node->proc->waitTime + node->proc->runTime);
 }
