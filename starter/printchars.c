@@ -23,6 +23,6 @@ int main(int argc, char** argv)
     {
         printf("%c",c);
         fflush(stdout);
-        usleep(100000);
+        usleep(10000);
     }
 }

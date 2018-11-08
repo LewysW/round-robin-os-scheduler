@@ -150,6 +150,8 @@ Intiliases a process struct given a config file entry
 int initStruct(char* line, struct process* proc) {
     const char* delim = " ";
     char* token;
+    proc->waitTime = 0;
+    proc->runTime = 0;
 
     //Checks for valid token
     if ((token = strtok(line, delim)) == NULL) return -1;
@@ -194,9 +196,12 @@ bool isNumeric(char* str) {
 }
 
 /**
-Measures the time a process has run and updates process time values
+Measures the time a process has run (in microseconds) and updates process time values
 @queue - process queue
-https://stackoverflow.com/questions/38831057/how-to-measure-the-execution-time-in-micro-seconds
+@return - process id return by waitpid
+BEGIN CITATION:
+CODE TO GET TIME OF DAY AND TO AND CALCULATE ELAPSED TIME WAS ADAPTED FROM:
+SOURCE: https://stackoverflow.com/questions/38831057/how-to-measure-the-execution-time-in-micro-seconds
 */
 pid_t quantum(Queue* queue) {
     struct timeval st, et;
@@ -212,13 +217,17 @@ pid_t quantum(Queue* queue) {
         if (elapsed >= QUANTUM) {
             queue->head->proc->runTime += elapsed;
             incrWaitTime(queue, elapsed);
+            printf("Elapsed: %lu\n", elapsed);
             return pid;
         }
     }
 
+    queue->head->proc->runTime += elapsed;
     incrWaitTime(queue, elapsed);
+    printf("Elapsed: %lu\n", elapsed);
     return pid;
 }
+//END CITATION
 
 /**
 Increments wait time of nodes in queue

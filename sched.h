@@ -7,15 +7,16 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#define QUANTUM 10000
+#define QUANTUM 100000
 
-//Struct to store process data
+//Struct to store process data (similar to a PCB)
 struct process {
     pid_t pid;
     int priority;
     char* path;
     char** args;
     int argc;
+    //All times are calculated/displayed in microseconds
     struct timeval arrivalTime;
     unsigned long long runTime;
     unsigned long long waitTime;
@@ -79,6 +80,7 @@ void incrWaitTime(Queue* queue, unsigned long long runTime);
 //Displays time data of processes
 void dispTimeData(Node* node);
 
+//Displays the total execution time, mean wait time, mean run time, and mean turnaround time
 void dispAverageTimes(long long unsigned waitTime, long long unsigned runTime, int numProcesses);
 
 #endif
