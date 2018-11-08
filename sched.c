@@ -217,14 +217,12 @@ pid_t quantum(Queue* queue) {
         if (elapsed >= QUANTUM) {
             queue->head->proc->runTime += elapsed;
             incrWaitTime(queue, elapsed);
-            printf("Elapsed: %lu\n", elapsed);
             return pid;
         }
     }
 
     queue->head->proc->runTime += elapsed;
     incrWaitTime(queue, elapsed);
-    printf("Elapsed: %lu\n", elapsed);
     return pid;
 }
 //END CITATION
@@ -267,7 +265,7 @@ Displays the total execution time, mean wait time, mean run time, and mean turna
 @numProcesses - total number of processes
 */
 void dispAverageTimes(long long unsigned waitTime, long long unsigned runTime, int numProcesses) {
-    printf("Total Execution Time: %lu\n", waitTime + runTime);
+    printf("Total Execution Time: %lu\n", runTime);
     printf("Average Wait Time: %lu\n", waitTime / numProcesses);
     printf("Average Run Time: %lu\n", runTime / numProcesses);
     printf("Average Turnaround Time: %lu\n\n", (waitTime / numProcesses) + (runTime / numProcesses));
