@@ -23,6 +23,8 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    printf("Travis build!!!\n");
+
     return 0;
 }
 
