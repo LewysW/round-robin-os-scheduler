@@ -1,4 +1,4 @@
 language: c
 compiler: gcc
 
-script: make && ./sched chars.conf
+script: make Makefile && ./sched chars.conf
