@@ -5,13 +5,14 @@ Initialises queue mutex, head, and tail.
 @queue - to initialise
 @return - result of initialisation
 */
-int initQueue(Queue* queue) {
-    if (pthread_mutex_init(&(queue->lock), NULL) != 0) {
+int initQueue(Queue** queue) {
+    *queue = (Queue*) malloc(sizeof(Queue));
+    if (pthread_mutex_init(&((*queue)->lock), NULL) != 0) {
         perror("Queue mutex initialisation failed");
-        exit(1);
+        return -1;
     }
 
-    queue->head = queue->tail = NULL;
+    (*queue)->head = (*queue)->tail = NULL;
     return 0;
 }
 

@@ -36,7 +36,7 @@ typedef struct queue {
 } Queue;
 
 //Initialises a queue
-int initQueue(Queue* queue);
+int initQueue(Queue** queue);
 
 //Creates a queue node
 Node* makeNode(struct process* p);

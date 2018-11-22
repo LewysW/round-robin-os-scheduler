@@ -37,10 +37,10 @@ int parseFile(char* fileName) {
     size_t len = 0;
     ssize_t bytesRead;
     struct process* proc;
-    Queue* queue = (Queue*) malloc(sizeof(queue));
+    Queue* queue;
+    initQueue(&queue);
     pthread_t tid;
     pid_t pid;
-
     fp = fopen(fileName, "r");
 
     if (fp == NULL) return -1;
