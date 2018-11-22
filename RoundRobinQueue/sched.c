@@ -44,12 +44,7 @@ int parseFile(char* fileName) {
     fp = fopen(fileName, "r");
 
     //Return error if fp NULL or file empty
-    if (fp == NULL) {
-        return -1;
-    } else {
-        fseek(fp, 0, SEEK_END);
-        if (ftell(fp) == 0) return -1;
-    }
+    if (fp == NULL) return -1;
 
     pthread_create(&(tid), NULL, schedule, queue);
 
