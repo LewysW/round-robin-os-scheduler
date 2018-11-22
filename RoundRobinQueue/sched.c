@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 
     //If readFile fails, print error message and exit.
     if ((parseFile(argv[1])) != 0) {
-        perror("Error reading config file");
+        perror("Error reading config file. Exit status");
         exit(1);
     }
 
@@ -43,7 +43,13 @@ int parseFile(char* fileName) {
     pid_t pid;
     fp = fopen(fileName, "r");
 
-    if (fp == NULL) return -1;
+    //Return error if fp NULL or file empty
+    if (fp == NULL) {
+        return -1;
+    } else {
+        fseek(fp, 0, SEEK_END);
+        if (ftell(fp) == 0) return -1;
+    }
 
     pthread_create(&(tid), NULL, schedule, queue);
 
@@ -53,7 +59,7 @@ int parseFile(char* fileName) {
         int status = initStruct(line, proc);
 
         if (status != 0) {
-            perror("Invalid config file entry");
+            perror("Invalid config file entry. Exit status");
             exit(status);
         }
 
@@ -80,6 +86,7 @@ int parseFile(char* fileName) {
             exit(0);
         }
     }
+    //Marks end of reading stage
     finished = true;
     pthread_join(tid, NULL);
     printf("Thread joined\n");
@@ -265,6 +272,7 @@ Displays the total execution time, mean wait time, mean run time, and mean turna
 @numProcesses - total number of processes
 */
 void dispAverageTimes(long long unsigned waitTime, long long unsigned runTime, int numProcesses) {
+    if (numProcesses == 0) numProcesses++;
     printf("Total Execution Time: %lu\n", runTime);
     printf("Average Wait Time: %lu\n", waitTime / numProcesses);
     printf("Average Run Time: %lu\n", runTime / numProcesses);
